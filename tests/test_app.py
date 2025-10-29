@@ -1,7 +1,8 @@
+# flake8: noqa: E402
 import os
 import sys
 
-# Ensure the app root directory is in sys.path *before* importing app
+# Add parent directory to path so app.py can be imported
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app import app
