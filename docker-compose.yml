@@ -1,35 +1,35 @@
 version: '3.8'
+
 services:
   app:
-    build: .  # Build from Dockerfile
+    build: .
     ports:
-      - "5000:5000"  # Map port
+      - "5000:5000"
     depends_on:
-      - db:  # Wait for DB
-          condition: service_healthy
+      - db
     environment:
-      - DATABASE_URI=postgresql://postgres:password@db:5432/lin_flask  # DB connection (use env vars)
+      - DATABASE_URI=postgresql://postgres:password@db:5432/lin_flask
     networks:
       - app-network
 
   db:
-    image: postgres:16  # Postgres image
+    image: postgres:16
     environment:
       POSTGRES_DB: lin_flask
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     volumes:
-      - db-data:/var/lib/postgresql/data  # Persistent volume
+      - db-data:/var/lib/postgresql/data
     networks:
       - app-network
     healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U postgres -d lin_flask"]
-        interval: 5s
-        timeout: 5s
-        retries: 5  
+      test: ["CMD-SHELL", "pg_isready -U postgres -d lin_flask"]
+      interval: 5s
+      timeout: 5s
+      retries: 5  
 
 networks:
-  app-network:  # Internal network
+  app-network:
 
 volumes:
-  db-data:  # Volume name
+  db-data:
