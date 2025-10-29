@@ -1,0 +1,5 @@
+pyyaml
+flask
+flask_cors
+Flask-SQLAlchemy
+psycopg2

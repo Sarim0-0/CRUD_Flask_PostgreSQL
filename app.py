@@ -4,7 +4,7 @@ from flask_cors import CORS
 import yaml
 
 app = Flask(__name__)
-db_config = yaml.load(open('database.yaml'))
+db_config = yaml.load(open('database.yaml'), Loader=yaml.SafeLoader)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_config['uri'] 
 db = SQLAlchemy(app)
 CORS(app)
