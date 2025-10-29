@@ -1,34 +1,36 @@
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import yaml
+import os
+
 
 app = Flask(__name__)
-db_config = yaml.load(open('database.yaml'), Loader=yaml.SafeLoader)
-app.config['SQLALCHEMY_DATABASE_URI'] = db_config['uri'] 
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///default.db')
 db = SQLAlchemy(app)
 CORS(app)
+
 
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255))
     age = db.Column(db.String(255))
-    
+
     def __init__(self, name, age):
         self.name = name
         self.age = age
-    
+
     def __repr__(self):
         return '%s/%s/%s' % (self.id, self.name, self.age)
+
 
 @app.route('/')
 def index():
     return render_template('home.html')
 
+
 @app.route('/data', methods=['POST', 'GET'])
 def data():
-    
     # POST a data to database
     if request.method == 'POST':
         body = request.json
@@ -44,55 +46,55 @@ def data():
             'name': name,
             'age': age
         })
-    
+
     # GET all data from database & sort by id
     if request.method == 'GET':
-        # data = User.query.all()
         data = User.query.order_by(User.id).all()
-        print(data)
-        dataJson = []
+        data_json = []
         for i in range(len(data)):
-            # print(str(data[i]).split('/'))
-            dataDict = {
+            data_dict = {
                 'id': str(data[i]).split('/')[0],
                 'name': str(data[i]).split('/')[1],
                 'age': str(data[i]).split('/')[2]
             }
-            dataJson.append(dataDict)
-        return jsonify(dataJson)
+            data_json.append(data_dict)
+        return jsonify(data_json)
+
 
 @app.route('/data/<string:id>', methods=['GET', 'DELETE', 'PUT'])
 def onedata(id):
-
     # GET a specific data by id
     if request.method == 'GET':
         data = User.query.get(id)
-        print(data)
-        dataDict = {
+        data_dict = {
             'id': str(data).split('/')[0],
             'name': str(data).split('/')[1],
             'age': str(data).split('/')[2]
         }
-        return jsonify(dataDict)
-        
+        return jsonify(data_dict)
+
     # DELETE a data
     if request.method == 'DELETE':
-        delData = User.query.filter_by(id=id).first()
-        db.session.delete(delData)
+        del_data = User.query.filter_by(id=id).first()
+        db.session.delete(del_data)
         db.session.commit()
-        return jsonify({'status': 'Data '+id+' is deleted from PostgreSQL!'})
+        return jsonify({'status': f'Data {id} is deleted from PostgreSQL!'})
 
     # UPDATE a data by id
     if request.method == 'PUT':
         body = request.json
-        newName = body['name']
-        newAge = body['age']
-        editData = User.query.filter_by(id=id).first()
-        editData.name = newName
-        editData.age = newAge
+        new_name = body['name']
+        new_age = body['age']
+        edit_data = User.query.filter_by(id=id).first()
+        edit_data.name = new_name
+        edit_data.age = new_age
         db.session.commit()
-        return jsonify({'status': 'Data '+id+' is updated from PostgreSQL!'})
+        return jsonify({'status': f'Data {id} is updated from PostgreSQL!'})
+
+
+with app.app_context():
+    db.create_all()
+
 
 if __name__ == '__main__':
-    app.debug = True
-    app.run()
+    app.run(host="0.0.0.0", port=5000)  # nosec B104
