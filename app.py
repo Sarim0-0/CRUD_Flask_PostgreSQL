@@ -6,10 +6,7 @@ import os
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URI',
-    yaml.load(open('database.yaml'), Loader=yaml.SafeLoader)['uri']
-)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///default.db')
 db = SQLAlchemy(app)
 CORS(app)
 
