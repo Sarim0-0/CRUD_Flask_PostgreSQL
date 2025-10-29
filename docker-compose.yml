@@ -5,7 +5,8 @@ services:
     ports:
       - "5000:5000"  # Map port
     depends_on:
-      - db  # Wait for DB
+      - db:  # Wait for DB
+          condition: service_healthy
     environment:
       - DATABASE_URI=postgresql://postgres:password@db:5432/lin_flask  # DB connection (use env vars)
     networks:
@@ -21,6 +22,11 @@ services:
       - db-data:/var/lib/postgresql/data  # Persistent volume
     networks:
       - app-network
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres -d lin_flask"]
+        interval: 5s
+        timeout: 5s
+        retries: 5  
 
 networks:
   app-network:  # Internal network

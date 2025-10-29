@@ -2,10 +2,13 @@ from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import yaml
+import os
 
 app = Flask(__name__)
-db_config = yaml.load(open('database.yaml'), Loader=yaml.SafeLoader)
-app.config['SQLALCHEMY_DATABASE_URI'] = db_config['uri'] 
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+    'DATABASE_URI',
+    yaml.load(open('database.yaml'), Loader=yaml.SafeLoader)['uri']
+)
 db = SQLAlchemy(app)
 CORS(app)
 
@@ -93,6 +96,8 @@ def onedata(id):
         db.session.commit()
         return jsonify({'status': 'Data '+id+' is updated from PostgreSQL!'})
 
+with app.app_context():
+    db.create_all()
+
 if __name__ == '__main__':
-    app.debug = True
-    app.run()
+    app.run(host="0.0.0.0", port=5000)
