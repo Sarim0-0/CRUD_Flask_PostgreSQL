@@ -1,5 +1,8 @@
-import sys
 import os
+import sys
+import pytest
+
+# Adjust path before importing app
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from app import app
