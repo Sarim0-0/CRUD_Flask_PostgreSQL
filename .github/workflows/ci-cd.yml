@@ -2,7 +2,7 @@ name: Flask CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main ]
   pull_request:
 
 jobs:
@@ -98,6 +98,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: test
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
@@ -109,13 +110,13 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-lab:latest .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/flask-lab:latest ${{ secrets.DOCKER_USERNAME }}/flask-lab:${{ github.sha }}
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:latest .
+          docker tag ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:latest ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:${{ github.sha }}
 
       - name: Push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/flask-lab:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/flask-lab:${{ github.sha }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:${{ github.sha }}
 
       - name: Show pushed images
-        run: docker images ${{ secrets.DOCKER_USERNAME }}/flask-lab
+        run: docker images ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql
