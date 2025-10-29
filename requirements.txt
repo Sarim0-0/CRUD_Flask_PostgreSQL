@@ -2,6 +2,6 @@ pyyaml
 flask
 flask_cors
 Flask-SQLAlchemy
-psycopg2
+psycopg2-binary
 pytest
 alembic
