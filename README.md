@@ -1,100 +1,59 @@
-![simplinnovation](https://4.bp.blogspot.com/-f7YxPyqHAzY/WJ6VnkvE0SI/AAAAAAAADTQ/0tDQPTrVrtMAFT-q-1-3ktUQT5Il9FGdQCLcB/s350/simpLINnovation1a.png)
+# Flask + PostgreSQL CRUD Application
 
-# Basic CRUD: Flask & PostgreSQL
+This is a simple CRUD web application built with **Flask** and **PostgreSQL**, containerized with **Docker**, and integrated with a **CI/CD pipeline** for automated testing, linting, and Docker image deployment.
 
-1. Activate __PostgreSQL__ server:
-    
-    ```bash
-    $ cd C:\Program Files\PostgreSQL\10\bin
-    $ psql -U postgres
-      Password for user postgres: <insert password here>
-    ```
+---
 
-#
+## Features
 
-2. Create a database on PostgreSQL, my database name is __"lin_flask"__:
-    
-    ```bash
-    postgres=#  CREATE DATABASE lin_flask;
-    postgres=#  \l 
-    postgres=#  \c lin_flask
-    ``` 
+- **CRUD operations** for user data (`name` and `age`)
+- RESTful API endpoints for data:
+  - `GET /data` – Get all users
+  - `POST /data` – Add a new user
+  - `GET /data/<id>` – Get a specific user
+  - `PUT /data/<id>` – Update a user
+  - `DELETE /data/<id>` – Delete a user
+- Web interface to view a welcome page
+- PostgreSQL database backend
+- Cross-Origin Resource Sharing (CORS) enabled
+- Dockerized app with separate app and DB containers
+- CI/CD pipeline using GitHub Actions
 
-#
+---
 
-3. Create a __"users"__ table on __"lin_flask"__ database:
-    
-    ```bash
-    lin_flask=#  CREATE TABLE users(
-                 id SERIAL PRIMARY KEY,
-                 name VARCHAR(255),
-                 age VARCAR(255)
-                 );
-    lin_flask=#  \d
-    ``` 
+## Tech Stack
 
-#
+- **Python 3.9**
+- **Flask** – Web framework
+- **Flask-SQLAlchemy** – ORM for database interaction
+- **PostgreSQL 16** – Relational database
+- **Docker & Docker Compose** – Containerization
+- **GitHub Actions** – CI/CD automation
+- **Pytest** – Testing framework
+- **Flake8 & Bandit** – Linting and security scanning
+- **Flask-CORS** – Handling cross-origin requests
 
-4. Clone this repo. Insert your database URI to __database.yaml__ file, then install all the packages needed. In this project I'm using __flask__, __flask_cors__, __flask_mysqldb__, __Flask-SQLAlchemy__ & __psycopg2__:
-    ```bash
-    $ git clone https://github.com/LintangWisesa/CRUD_Flask_PostgreSQL.git
-    $ cd CRUD_Flask_PostgreSQL
-    $ pip install flask flask_cors Flask-SQLAlchemy psycopg2
-    ```
+---
 
-#
+## Getting Started
 
-5. Run the server file. Make sure your PostgreSQL server is still running. Your application server will run locally at __*http://localhost:5000/*__ :
-    ```bash
-    $ python app.py
-    ```
+### Prerequisites
 
-#
+- Docker & Docker Compose installed
+- Git installed
+- (Optional) Python 3.9 installed if running locally without Docker
 
-6. Give a request to the server. You can use __Postman__ app:
-    
-    __See the opening screen (*home.html*)__
-    ```bash
-    GET /
-    ```
+---
 
-    __Post a data to database:__ 
-    ```bash
-    POST /data
-    body request: {name:"x", age:"y"}
-    ```
-    __Get all data & specific data by id:__
-    ```bash
-    GET /data
-    GET /data/{:id}
-    ```
-    __Update a data by id__:
-    ```bash
-    PUT /data/{:id}
-    body request: {name:"x", age:"y"}
-    ```
-    __Delete a data by id:__
-    ```bash
-    DELETE /data/{:id}
-    ```
+### Running with Docker
 
-#
+1. Clone the repository:
+   git clone <repo-url>
+   cd <repo-folder>
 
-7. Enjoy your code! 😎👌
+2. Start the application:
+    docker-compose up --build
 
-## See also:
-
-- [Basic CRUD: Flask & MySQL](https://github.com/LintangWisesa/CRUD_Flask_MySQL)
-- [Basic CRUD: Flask & PostgreSQL](https://github.com/LintangWisesa/CRUD_Flask_PostgreSQL)
-- [Basic CRUD: Flask & MongoDB](https://github.com/LintangWisesa/CRUD_Flask_MongoDB)
-
-#
-
-#### Lintang Wisesa :love_letter: _lintangwisesa@ymail.com_
-
-[Facebook](https://www.facebook.com/lintangbagus) | 
-[Twitter](https://twitter.com/Lintang_Wisesa) |
-[Google+](https://plus.google.com/u/0/+LintangWisesa1) |
-[Youtube](https://www.youtube.com/user/lintangbagus) | 
-:octocat: [GitHub](https://github.com/LintangWisesa) |
-[Hackster](https://www.hackster.io/lintangwisesa)
+3. Access the app:
+    Web interface: http://localhost:5000
+    API endpoints: http://localhost:5000/data
