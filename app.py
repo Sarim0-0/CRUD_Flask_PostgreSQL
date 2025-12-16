@@ -29,6 +29,11 @@ def index():
     return render_template('home.html')
 
 
+@app.route('/crud')
+def crud():
+    return render_template('crud.html')
+
+
 @app.route('/data', methods=['POST', 'GET'])
 def data():
     # POST a data to database
