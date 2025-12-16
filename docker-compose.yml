@@ -1,46 +1,52 @@
 services:
   app:
-    build: .  # Build from Dockerfile
+    build: .
     ports:
-      - "5000:5000"  # Map port
+      - "5000:5000"
     depends_on:
-      - db  # Wait for DB
-      - redis  # Wait for Redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - DATABASE_URI=${DATABASE_URI}
       - REDIS_URL=${REDIS_URL}
-      - FLASK_ENV=${FLASK_ENV}
+      - FLASK_ENV=${FLASK_ENV:-development}
       - SECRET_KEY=${SECRET_KEY}
     networks:
       - app-network
     restart: unless-stopped
 
   db:
-    image: postgres:13  # Postgres image
+    image: postgres:16  # Updated to match your Terraform version
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - db-data:/var/lib/postgresql/data  # Persistent volume
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d lin_flask"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    profiles:
+      - local  # Only start local DB when using 'docker compose --profile local up'
 
   redis:
-    image: redis:7-alpine  # Redis image (lightweight)
+    image: redis:7-alpine
     ports:
-      - "6379:6379"  # Redis default port
+      - "6379:6379"
     volumes:
-      - redis-data:/data  # Persistent Redis data
+      - redis-data:/data
     networks:
       - app-network
-    command: redis-server --appendonly yes  # Enable persistence
+    command: redis-server --appendonly yes
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -49,8 +55,8 @@ services:
       retries: 3
 
 networks:
-  app-network:  # Internal network
+  app-network:
 
 volumes:
-  db-data:  # PostgreSQL volume
-  redis-data:  # Redis volume
+  db-data:
+  redis-data:

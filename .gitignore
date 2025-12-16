@@ -1,2 +1,13 @@
 .venv
 .env
+# Terraform
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.backup
+infra/*.tfvars
+infra/.terraform.lock.hcl
+
+# AWS & SSH Keys
+*.pem
+*.key
+.aws/

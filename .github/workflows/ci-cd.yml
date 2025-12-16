@@ -5,6 +5,9 @@ on:
     branches: '**'
   pull_request:
 
+env:
+  AWS_REGION: ap-south-1
+
 jobs:
   # -----------------------
   # 1️⃣ BUILD & INSTALL
@@ -69,9 +72,19 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=5
 
     env:
-      DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb
+      DATABASE_URI: postgresql+psycopg2://testuser:testpass@localhost:5432/testdb
+      REDIS_URL: redis://localhost:6379/0
 
     steps:
       - uses: actions/checkout@v4
@@ -89,6 +102,12 @@ jobs:
             echo "Waiting for database..."
             sleep 2
           done
+      - name: Wait for Redis
+        run: |
+          until redis-cli -h localhost ping; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
       - name: Run tests
         run: pytest -v
 
@@ -98,6 +117,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     steps:
       - uses: actions/checkout@v4
 
@@ -110,7 +130,8 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:latest .
-          docker tag ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:latest ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:${{ github.sha }}
+          docker tag ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:latest \
+               ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql:${{ github.sha }}
 
       - name: Push Docker image
         run: |
@@ -119,3 +140,112 @@ jobs:
 
       - name: Show pushed images
         run: docker images ${{ secrets.DOCKER_USERNAME }}/crud-flask-postgresql
+
+  # -----------------------
+  # 5️⃣ TERRAFORM VALIDATE
+  # -----------------------
+  terraform-validate:
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.ref == 'refs/heads/main'
+    defaults:
+      run:
+        working-directory: ./infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: |
+          terraform plan -no-color \
+            -var="db_password=${{ secrets.DB_PASSWORD }}" \
+            -out=tfplan
+        continue-on-error: true
+
+      - name: Upload Terraform Plan
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-plan
+          path: infra/tfplan
+
+  # -----------------------
+  # 6️⃣ TERRAFORM APPLY (Manual Approval)
+  # -----------------------
+  terraform-apply:
+    runs-on: ubuntu-latest
+    needs: terraform-validate
+    if: github.ref == 'refs/heads/main'
+    environment: 
+      name: production
+      url: http://${{ steps.tf-outputs.outputs.ec2_ip }}:5000
+    defaults:
+      run:
+        working-directory: ./infra
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
+          terraform_wrapper: false
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve \
+            -var="db_password=${{ secrets.DB_PASSWORD }}"
+
+      - name: Get Terraform Outputs
+        id: tf-outputs
+        run: |
+          echo "ec2_ip=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+          echo "rds_endpoint=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
+
+      - name: Save Terraform Outputs
+        run: |
+          terraform output -json > terraform-outputs.json
+          cat terraform-outputs.json
+
+      - name: Display Deployment Info
+        run: |
+          echo "🚀 Deployment Complete!"
+          echo "EC2 Public IP: ${{ steps.tf-outputs.outputs.ec2_ip }}"
+          echo "RDS Endpoint: ${{ steps.tf-outputs.outputs.rds_endpoint }}"
+          echo "App URL: http://${{ steps.tf-outputs.outputs.ec2_ip }}:5000"
+
+      - name: Upload Terraform Outputs
+        uses: actions/upload-artifact@v3
+        with:
+          name: terraform-outputs
+          path: infra/terraform-outputs.json
