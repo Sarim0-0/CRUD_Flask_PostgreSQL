@@ -1,4 +1,3 @@
-# DB Subnet Group
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-db-subnet-group"
   subnet_ids = [aws_subnet.private_1.id, aws_subnet.private_2.id]
@@ -8,7 +7,6 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
-# RDS PostgreSQL Instance
 resource "aws_db_instance" "postgres" {
   identifier             = "${var.project_name}-postgres"
   engine                 = "postgres"

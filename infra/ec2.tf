@@ -1,4 +1,3 @@
-# Get latest Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -14,7 +13,6 @@ data "aws_ami" "amazon_linux" {
   }
 }
 
-# EC2 Instance for Flask App
 resource "aws_instance" "app" {
   ami           = data.aws_ami.amazon_linux.id
   instance_type = "t3.micro"  # Free tier eligible
