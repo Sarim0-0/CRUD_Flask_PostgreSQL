@@ -59,19 +59,19 @@ jobs:
       db:
         image: postgres:16
         env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: lin_flask
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
         ports:
           - 5432:5432
         options: >-
-          --health-cmd="pg_isready -U postgres -d lin_flask"
+          --health-cmd="pg_isready -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME }}"
           --health-interval=5s
           --health-timeout=5s
           --health-retries=5
 
     env:
-      DATABASE_URL: postgresql://postgres:password@localhost:5432/lin_flask
+      DATABASE_URL: postgresql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@localhost:5432/${{ secrets.DB_NAME }}
 
     steps:
       - uses: actions/checkout@v4
@@ -85,7 +85,7 @@ jobs:
           pip install pytest psycopg2-binary
       - name: Wait for PostgreSQL
         run: |
-          until pg_isready -h localhost -U postgres -d lin_flask; do
+          until pg_isready -h localhost -U ${{ secrets.DB_USER }} -d ${{ secrets.DB_NAME }}; do
             echo "Waiting for database..."
             sleep 2
           done
