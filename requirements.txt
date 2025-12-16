@@ -5,3 +5,6 @@ Flask-SQLAlchemy
 psycopg2-binary
 pytest
 alembic
+redis==5.0.1
+Flask-Caching
+python-dotenv
