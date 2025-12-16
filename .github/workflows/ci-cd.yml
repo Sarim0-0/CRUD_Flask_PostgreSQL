@@ -141,6 +141,7 @@ jobs:
   terraform-validate:
     runs-on: ubuntu-latest
     needs: docker
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/sarim-final'
     defaults:
       run:
         working-directory: ./infra
@@ -177,7 +178,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Changed from v3 to v4
         with:
           name: terraform-plan
           path: infra/tfplan
@@ -188,6 +189,7 @@ jobs:
   terraform-apply:
     runs-on: ubuntu-latest
     needs: terraform-validate
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/sarim-final'
     environment: 
       name: production
       url: http://${{ steps.tf-outputs.outputs.ec2_ip }}:5000
@@ -237,7 +239,7 @@ jobs:
           echo "App URL: http://${{ steps.tf-outputs.outputs.ec2_ip }}:5000"
 
       - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Changed from v3 to v4
         with:
           name: terraform-outputs
           path: infra/terraform-outputs.json
