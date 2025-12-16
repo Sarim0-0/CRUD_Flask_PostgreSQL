@@ -18,4 +18,8 @@
 
 4. run server
     $ python app.py    
-                 
+
+
+
+       
+ci/cd check
