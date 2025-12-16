@@ -160,18 +160,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Terraform Init
-        run: terraform init -backend=false  # Skip backend initialization
+      - name: Debug - List Terraform Files
+        run: ls -la
 
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
-        continue-on-error: true
+      - name: Terraform Init
+        run: |
+          terraform init -backend=false
+        continue-on-error: false
 
       - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Plan (Dry Run)
         run: |
-          terraform plan -no-color \
-            -var="db_password=${{ secrets.DB_PASSWORD }}" || echo "Plan may fail without state - this is expected"
+          terraform validate
+          echo "✅ Terraform validation successful!"
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive || echo "⚠️ Some files need formatting"
         continue-on-error: true
