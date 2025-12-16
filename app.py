@@ -209,7 +209,7 @@ def init_db():
             with app.app_context():
                 db.create_all()
                 print("✅ Database tables created successfully!")
-                
+
                 # Test cache connection
                 cache.set('init_test', 'success', timeout=10)
                 if cache.get('init_test') == 'success':
