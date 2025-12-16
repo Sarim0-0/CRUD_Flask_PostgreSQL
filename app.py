@@ -82,7 +82,7 @@ def data():
     if request.method == 'GET':
         # Try to get from cache first
         cached_users = cache.get('all_users')
-        
+
         if cached_users:
             print("📦 Returning users from cache")
             return jsonify(cached_users)
@@ -91,7 +91,7 @@ def data():
         print("🔍 Cache miss - querying database")
         users = User.query.order_by(User.id).all()
         users_list = [user.to_dict() for user in users]
-        
+
         # Store in cache for future requests
         cache.set('all_users', users_list, timeout=300)
         print(f"💾 Cached {len(users_list)} users")
@@ -105,14 +105,14 @@ def onedata(id):
     if request.method == 'GET':
         cache_key = f'user_{id}'
         cached_user = cache.get(cache_key)
-        
+
         if cached_user:
             print(f"📦 Returning user {id} from cache")
             return jsonify(cached_user)
 
         print(f"🔍 Cache miss - querying database for user {id}")
         user = User.query.get(id)
-        
+
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
@@ -125,7 +125,7 @@ def onedata(id):
     # DELETE - Remove a user
     if request.method == 'DELETE':
         user = User.query.get(id)
-        
+
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
@@ -151,7 +151,7 @@ def onedata(id):
             return jsonify({'error': 'Name and age are required'}), 400
 
         user = User.query.get(id)
-        
+
         if not user:
             return jsonify({'error': 'User not found'}), 404
 
@@ -185,7 +185,7 @@ def cache_stats():
         cache.set('test_key', 'test_value', timeout=10)
         test_value = cache.get('test_key')
         cache.delete('test_key')
-        
+
         return jsonify({
             'status': 'Cache is working',
             'backend': 'Redis',
@@ -203,7 +203,7 @@ def cache_stats():
 def init_db():
     max_retries = 5
     retry_count = 0
-    
+
     while retry_count < max_retries:
         try:
             with app.app_context():
