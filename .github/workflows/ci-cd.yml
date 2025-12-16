@@ -153,22 +153,18 @@ jobs:
         with:
           terraform_version: 1.6.0
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+        continue-on-error: true
 
       - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Format Check
-        run: terraform fmt -check
-        continue-on-error: true
+        run: terraform init -backend=false
 
       - name: Terraform Validate
         run: terraform validate
+
+      - name: Show Terraform Version
+        run: terraform version
 
       - name: Terraform Plan
         run: |
