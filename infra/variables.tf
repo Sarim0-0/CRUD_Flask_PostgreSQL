@@ -22,11 +22,22 @@ variable "vpc_cidr" {
   default     = "10.0.0.0/16"
 }
 
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "db_name" {
+  description = "Database name"
+  type        = string
+  default     = "lin_flask"
+}
+
 variable "db_username" {
   description = "Database master username"
   type        = string
   default     = "postgres"
-  sensitive   = true
 }
 
 variable "db_password" {
