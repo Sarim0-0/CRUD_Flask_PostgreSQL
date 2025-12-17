@@ -201,7 +201,7 @@ jobs:
 
       - name: Terraform Plan
         run: |
-          terraform plan -out=tfplan
+          terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -out=tfplan
           echo "✅ Terraform plan generated!"
 
       - name: Terraform Apply
