@@ -171,61 +171,25 @@ jobs:
         run: terraform fmt -check -recursive || echo "⚠️ Some files need formatting"
         continue-on-error: true
 
+      - name: Terraform Plan (Dry Run)
+        run: |
+          terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -no-color
+          echo "✅ Terraform plan completed (dry run only - not applied)"
+        continue-on-error: true
+
   # -----------------------
-  # 6️⃣ TERRAFORM APPLY (Infrastructure Provisioning)
+  # 6️⃣ TERRAFORM APPLY - SKIPPED
   # -----------------------
-  terraform-apply:
-    runs-on: ubuntu-latest
-    needs: terraform-validate
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/sarim-final'
-    defaults:
-      run:
-        working-directory: ./infra
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.0
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Terraform Init
-        run: terraform init -backend=false
-
-      - name: Terraform Plan
-        run: |
-          terraform plan -var="db_password=${{ secrets.DB_PASSWORD }}" -out=tfplan
-          echo "✅ Terraform plan generated!"
-
-      - name: Terraform Apply
-        run: |
-          terraform apply -auto-approve tfplan
-          echo "✅ Infrastructure provisioned successfully!"
-
-      - name: Save Terraform Outputs
-        run: |
-          terraform output > terraform-output.txt
-          cat terraform-output.txt
-
-      - name: Upload Terraform Outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-outputs
-          path: infra/terraform-output.txt
+  # Infrastructure was provisioned manually
+  # Terraform apply is skipped in CI/CD to prevent conflicts with existing resources
+  # The validate stage above ensures Terraform configuration is correct
 
   # -----------------------
   # 7️⃣ DEPLOY TO KUBERNETES
   # -----------------------
   deploy-kubernetes:
     runs-on: ubuntu-latest
-    needs: terraform-apply
+    needs: terraform-validate  # Changed from terraform-apply
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/sarim-final'
     steps:
       - uses: actions/checkout@v4
