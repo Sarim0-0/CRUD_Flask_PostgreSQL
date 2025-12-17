@@ -35,8 +35,6 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
-    profiles:
-      - local  # Only start local DB when using 'docker compose --profile local up'
 
   redis:
     image: redis:7-alpine
