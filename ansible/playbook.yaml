@@ -1,0 +1,173 @@
+---
+- name: Configure EC2 Instance for Flask Application
+  hosts: ec2_instances
+  become: yes
+  gather_facts: yes
+  
+  tasks:
+    - name: Update system packages
+      yum:
+        name: '*'
+        state: latest
+        update_cache: yes
+      tags: [system, update]
+    
+    - name: Install required system packages
+      yum:
+        name:
+          - git
+          - python3
+          - python3-pip
+          - docker
+        state: present
+      tags: [system, packages]
+    
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+      tags: [docker]
+    
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+      tags: [docker]
+    
+    - name: Install Docker Compose
+      get_url:
+        url: https://github.com/docker/compose/releases/latest/download/docker-compose-Linux-x86_64
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+      tags: [docker]
+    
+    - name: Create application directory
+      file:
+        path: /opt/flask-app
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+      tags: [app]
+    
+    - name: Install Python dependencies
+      pip:
+        name:
+          - flask
+          - flask-sqlalchemy
+          - flask-cors
+          - psycopg2-binary
+          - redis
+          - python-dotenv
+        executable: pip3
+      tags: [app, python]
+
+- name: Configure Kubernetes Resources
+  hosts: kubernetes
+  connection: local
+  gather_facts: no
+  
+  tasks:
+    - name: Check if Minikube is running
+      command: minikube status
+      register: minikube_status
+      changed_when: false
+      failed_when: false
+      tags: [k8s, check]
+    
+    - name: Display Minikube status
+      debug:
+        var: minikube_status.stdout_lines
+      tags: [k8s, check]
+    
+    - name: Get all pods in dev namespace
+      command: kubectl get pods -n dev
+      register: dev_pods
+      changed_when: false
+      tags: [k8s, pods]
+    
+    - name: Display dev namespace pods
+      debug:
+        var: dev_pods.stdout_lines
+      tags: [k8s, pods]
+    
+    - name: Get all services in dev namespace
+      command: kubectl get svc -n dev
+      register: dev_services
+      changed_when: false
+      tags: [k8s, services]
+    
+    - name: Display dev namespace services
+      debug:
+        var: dev_services.stdout_lines
+      tags: [k8s, services]
+    
+    - name: Verify monitoring namespace
+      command: kubectl get pods -n monitoring
+      register: monitoring_pods
+      changed_when: false
+      tags: [k8s, monitoring]
+    
+    - name: Display monitoring pods
+      debug:
+        var: monitoring_pods.stdout_lines
+      tags: [k8s, monitoring]
+
+- name: Deploy Application Configuration
+  hosts: ec2_instances
+  become: yes
+  gather_facts: no
+  
+  vars:
+    app_port: 5000
+    db_host: "crud-flask-v2.cb0m4i6ya1c2.ap-south-1.rds.amazonaws.com"
+    db_port: 5432
+    db_name: "lin_flask"
+    db_user: "postgres"
+  
+  tasks:
+    - name: Create environment file for Flask app
+      copy:
+        content: |
+          DATABASE_URI=postgresql+psycopg2://{{ db_user }}:password@{{ db_host }}:{{ db_port }}/{{ db_name }}
+          REDIS_URL=redis://localhost:6379/0
+          SECRET_KEY=your-secret-key-here
+          FLASK_ENV=production
+        dest: /opt/flask-app/.env
+        owner: ec2-user
+        group: ec2-user
+        mode: '0600'
+      tags: [app, config]
+    
+    - name: Check if Docker is running
+      systemd:
+        name: docker
+        state: started
+      tags: [docker, verify]
+    
+    - name: Display Docker version
+      command: docker --version
+      register: docker_version
+      changed_when: false
+      tags: [docker, verify]
+    
+    - name: Show Docker version
+      debug:
+        var: docker_version.stdout
+      tags: [docker, verify]
+
+- name: Health Check and Validation
+  hosts: all_servers
+  gather_facts: no
+  
+  tasks:
+    - name: Ping all servers
+      ping:
+      tags: [health]
+    
+    - name: Display success message
+      debug:
+        msg: "Configuration completed successfully for {{ inventory_hostname }}"
+      tags: [health]

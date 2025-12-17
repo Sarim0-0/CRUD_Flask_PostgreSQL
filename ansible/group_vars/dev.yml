@@ -1,0 +1,15 @@
+---
+# Development environment variables
+environment: development
+flask_env: development
+debug_mode: true
+
+# Development-specific database
+db_password: "password"  # Use ansible-vault in production
+
+# Development resources
+replicas: 2
+cpu_request: "100m"
+memory_request: "128Mi"
+cpu_limit: "500m"
+memory_limit: "512Mi"

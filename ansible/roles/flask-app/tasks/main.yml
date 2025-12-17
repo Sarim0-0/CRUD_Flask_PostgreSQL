@@ -1,0 +1,66 @@
+---
+# tasks file for flask-app role
+- name: Create application directory
+  file:
+    path: /opt/flask-app
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+
+- name: Install Python and pip
+  yum:
+    name:
+      - python3
+      - python3-pip
+      - git
+    state: present
+
+- name: Install Python dependencies
+  pip:
+    name:
+      - flask==3.0.0
+      - flask-sqlalchemy==3.1.1
+      - flask-cors==4.0.0
+      - psycopg2-binary==2.9.9
+      - redis==5.0.1
+      - python-dotenv==1.0.0
+    executable: pip3
+
+- name: Create environment file
+  template:
+    src: env.j2
+    dest: /opt/flask-app/.env
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0600'
+  when: db_host is defined
+
+- name: Create systemd service for Flask app
+  copy:
+    content: |
+      [Unit]
+      Description=Flask CRUD Application
+      After=network.target
+
+      [Service]
+      Type=simple
+      User={{ ansible_user }}
+      WorkingDirectory=/opt/flask-app
+      Environment="PATH=/usr/local/bin:/usr/bin"
+      EnvironmentFile=/opt/flask-app/.env
+      ExecStart=/usr/bin/python3 /opt/flask-app/app.py
+      Restart=always
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/flask-app.service
+    mode: '0644'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Display Flask app setup status
+  debug:
+    msg: "Flask application configured successfully"

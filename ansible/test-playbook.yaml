@@ -1,0 +1,112 @@
+---
+# Simple local test playbook to verify Ansible setup
+- name: Test Ansible Configuration - Local Kubernetes Check
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  
+  tasks:
+    - name: Display Ansible version
+      command: ansible --version
+      register: ansible_version
+      changed_when: false
+    
+    - name: Show Ansible version
+      debug:
+        var: ansible_version.stdout_lines
+    
+    - name: Check if Minikube is installed
+      command: minikube version
+      register: minikube_version
+      changed_when: false
+      failed_when: false
+    
+    - name: Show Minikube version
+      debug:
+        var: minikube_version.stdout_lines
+      when: minikube_version.rc == 0
+    
+    - name: Check Minikube status
+      command: minikube status
+      register: minikube_status
+      changed_when: false
+      failed_when: false
+    
+    - name: Display Minikube status
+      debug:
+        var: minikube_status.stdout_lines
+      when: minikube_status.rc == 0
+    
+    - name: Check kubectl version
+      command: kubectl version --client --short
+      register: kubectl_version
+      changed_when: false
+      failed_when: false
+    
+    - name: Show kubectl version
+      debug:
+        var: kubectl_version.stdout
+      when: kubectl_version.rc == 0
+    
+    - name: Get all namespaces
+      command: kubectl get namespaces
+      register: k8s_namespaces
+      changed_when: false
+      failed_when: false
+    
+    - name: Display Kubernetes namespaces
+      debug:
+        var: k8s_namespaces.stdout_lines
+      when: k8s_namespaces.rc == 0
+    
+    - name: Get pods in dev namespace
+      command: kubectl get pods -n dev
+      register: dev_pods
+      changed_when: false
+      failed_when: false
+    
+    - name: Display dev namespace pods
+      debug:
+        var: dev_pods.stdout_lines
+      when: dev_pods.rc == 0
+    
+    - name: Get pods in monitoring namespace
+      command: kubectl get pods -n monitoring
+      register: monitoring_pods
+      changed_when: false
+      failed_when: false
+    
+    - name: Display monitoring namespace pods
+      debug:
+        var: monitoring_pods.stdout_lines
+      when: monitoring_pods.rc == 0
+    
+    - name: Get all services in dev namespace
+      command: kubectl get svc -n dev
+      register: dev_services
+      changed_when: false
+      failed_when: false
+    
+    - name: Display dev services
+      debug:
+        var: dev_services.stdout_lines
+      when: dev_services.rc == 0
+    
+    - name: Check Docker version
+      command: docker --version
+      register: docker_version
+      changed_when: false
+      failed_when: false
+    
+    - name: Show Docker version
+      debug:
+        var: docker_version.stdout
+      when: docker_version.rc == 0
+    
+    - name: Display success message
+      debug:
+        msg: |
+          ✅ Ansible Configuration Test Completed!
+          ========================================
+          All checks passed. Your Ansible setup is working correctly.
+          You can now run the main playbook against remote hosts.

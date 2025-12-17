@@ -1,0 +1,27 @@
+---
+# Common variables for all hosts
+ansible_python_interpreter: /usr/bin/python3
+
+# Application configuration
+app_name: flask-crud-app
+app_port: 5000
+app_directory: /opt/flask-app
+
+# Database configuration
+db_host: "crud-flask-v2.cb0m4i6ya1c2.ap-south-1.rds.amazonaws.com"
+db_port: 5432
+db_name: "lin_flask"
+db_user: "postgres"
+# Note: Use ansible-vault for passwords in production
+
+# Redis configuration
+redis_host: "localhost"
+redis_port: 6379
+
+# Docker configuration
+docker_compose_version: "2.23.0"
+
+# Kubernetes configuration
+k8s_namespace_dev: "dev"
+k8s_namespace_prod: "prod"
+k8s_namespace_monitoring: "monitoring"

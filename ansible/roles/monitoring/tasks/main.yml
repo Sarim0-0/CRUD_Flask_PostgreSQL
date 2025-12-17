@@ -1,0 +1,47 @@
+---
+# tasks file for monitoring role
+- name: Check Prometheus status
+  command: kubectl get deployment prometheus -n monitoring
+  register: prometheus_status
+  changed_when: false
+  failed_when: false
+  delegate_to: localhost
+
+- name: Check Grafana status
+  command: kubectl get deployment grafana -n monitoring
+  register: grafana_status
+  changed_when: false
+  failed_when: false
+  delegate_to: localhost
+
+- name: Display Prometheus status
+  debug:
+    var: prometheus_status.stdout_lines
+  when: prometheus_status.rc == 0
+
+- name: Display Grafana status
+  debug:
+    var: grafana_status.stdout_lines
+  when: grafana_status.rc == 0
+
+- name: Get monitoring namespace services
+  command: kubectl get svc -n monitoring
+  register: monitoring_services
+  changed_when: false
+  delegate_to: localhost
+
+- name: Display monitoring services
+  debug:
+    var: monitoring_services.stdout_lines
+
+- name: Verify metrics-server is running
+  command: kubectl get deployment metrics-server -n kube-system
+  register: metrics_server
+  changed_when: false
+  failed_when: false
+  delegate_to: localhost
+
+- name: Display metrics-server status
+  debug:
+    var: metrics_server.stdout_lines
+  when: metrics_server.rc == 0

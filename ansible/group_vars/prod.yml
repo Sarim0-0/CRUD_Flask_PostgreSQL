@@ -1,0 +1,16 @@
+---
+# Production environment variables
+environment: production
+flask_env: production
+debug_mode: false
+
+# Production resources
+replicas: 3
+cpu_request: "200m"
+memory_request: "256Mi"
+cpu_limit: "1000m"
+memory_limit: "1Gi"
+
+# Production security
+enable_ssl: true
+enforce_https: true
